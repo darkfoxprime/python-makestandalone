@@ -1,6 +1,6 @@
-# https://raw.githubusercontent.com/darkfoxprime/python-makestandalone/master/src/StandaloneModule.py
 # Author:   Johnson Earls
 # Version:  0.0.0
+# URL:      https://raw.githubusercontent.com/darkfoxprime/python-makestandalone/
 '''This module provides the StandaloneModule class, which can help with
 incorporating local library modules into an application module to create
 stand-alone module.

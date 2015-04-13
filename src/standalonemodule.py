@@ -1,3 +1,4 @@
+# Requires: Python 2.6
 # Author:   Johnson Earls
 # Version:  0.0.0
 # URL:      https://raw.githubusercontent.com/darkfoxprime/python-makestandalone/
@@ -5,6 +6,88 @@
 incorporating local library modules into an application module to create
 stand-alone module.
 '''
+
+########################################################################
+# system libraries
+import sys
+# !!! check minimum version immediately
+if sys.version_info[0] < 2 or sys.version_info[1] < 6:
+    raise RuntimeError("standalonemodule requires Python 2.6 or better")
+# rest of system libraries (that might only exist in required version)
+import ast
+import os.path
+
+########################################################################
+# 3rd party libraries
+# (if any)
+
+########################################################################
+# local libraries
+# (if any)
+
+########################################################################
+
+__all__ = ['StandaloneModule']
+
+########################################################################
+# define some internal clases needed for the StandaloneModule class to
+# work
+
+########################################################################
+# The ImportNodeTransformer processes import nodes and, if needed,
+# replaces them with their wrapped content.
+
+class ImportNodeTransformer(ast.NodeTransformer):
+    def __init__(self, importPath=[]):
+        self._importPath = importPath
+    def visit_Import(self,node):
+        replacementNodes = [
+            self._processNode(
+                alias.name,
+                module_as=alias.asname,
+                lineno=node.lineno,
+                charno=node.col_offset
+            ) for alias in node.names
+        ]
+        return replacementNodes
+    def visit_ImportFrom(self,node):
+        replacementNodes = [
+            self._processNode(
+                self.module,
+                import_names=[(alias.name, alias.asname) for alias in node.names],
+                relative_level=node.level,
+                lineno=node.lineno,
+                charno=node.col_offset
+            )
+        ]
+        return replacementNodes
+    def _processNode(
+            self, module, module_as = None,
+            import_names = None, relative_level = None,
+            lineno = None, charno = None):
+        print "importing module %s(%s) names %s level %s location %s:%s" % (repr(module), repr(module_as), repr(import_names), repr(relative_level), repr(lineno), repr(charno))
+        if import_names is None:
+            return ast.Import(ast.alias(module, module_as), lineno=lineno, col_offset=charno)
+        else:
+            return ast.ImportFrom(module, [ast.alias(name, asname) for (name,asname) in import_names], relative_level, lineno=lineno, col_offset=charno)
+
+########################################################################
+# The ASTFormatter class walks an AST and produces properly formatted
+# python code for that AST.
+
+class ASTFormatter(ast.NodeVisitor):
+    def generic_visit(self,node):
+        try:
+            fields = node._fields
+        except AttributeError,e:
+            fields = None
+        print "Node type %s fields %s" % (node.__class__.__name__, repr(fields))
+        if fields is not None:
+            for field in fields:
+                self.generic_visit(getattr(node,field))
+
+########################################################################
+# the real StandaloneModule class:
 
 class StandaloneModule(object):
     '''Process a module file to allow for incorporation of imported modules.
@@ -88,7 +171,8 @@ class StandaloneModule(object):
 
 
     def __init__(self, moduleFileName, importPath=None):
-        '''Create the StandaloneModule instance by loading the given module and processing it to locate the import statements.
+        '''Create the StandaloneModule instance by loading the given module and
+        processing it to locate the import statements.
         
         `moduleFileName` must be the full path to the module file.
         
@@ -97,7 +181,19 @@ class StandaloneModule(object):
         to `importPath`.  Any relative directories in `importPath` are relative to
         the directory that contains `moduleFileName`.
         '''
-        pass # TODO: Not Yet Implemented
+        self.moduleFileName = moduleFileName
+        self.importPath = [os.path.dirname(moduleFileName)]
+        if importPath:
+            self.importPath = importPath + self.importPath
+        self._analyze()
+
+    def _analyze(self):
+        # analyze the module by running it through the AST parser and finding the imports.
+        module_ast = ast.parse(open(self.moduleFileName, 'rU').read(), self.moduleFileName, mode='exec')
+        self.imports = {}
+        new_ast = ImportNodeTransformer().visit(module_ast)
+        ASTFormatter().visit(new_ast)
+        
     
     def __str__(self):
         '''Return a string of the module contents.'''
@@ -110,9 +206,9 @@ class StandaloneModule(object):
 
         *   `filename` holds the absolute pathname from which the module was loaded.
 
-        *   `names` is a dictionary mapping line numbers to names.
+        *   `names` is a dictionary mapping (lineno,charno) to names.
 
-            The line numbers locate where in the module file the import occurred.
+            The (lineno,charno) pair locate where in the module file the import occurred.
 
             The mapped names can either be a single string or a list.
 
@@ -186,3 +282,13 @@ class StandaloneModule(object):
         replaces its imports appropriately, and returns the new module text. 
         '''
         return "" # TODO: Not Yet Implemented
+    
+    def __repr__(self):
+        return "%s(%s,importPath=%s)" % (self.__class__.__name__, repr(self.moduleFileName), repr(self.importPath))
+
+
+if __name__ == '__main__':
+    import inspect
+    module = StandaloneModule(inspect.getfile(inspect.currentframe()))
+    import pprint
+    pprint.pprint(module)

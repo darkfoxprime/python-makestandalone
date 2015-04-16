@@ -70,10 +70,10 @@ class ImportNodeTransformer(ast.NodeTransformer):
             self, module, module_as = None,
             import_names = None, relative_level = None,
             lineno = None, charno = None):
-        #print "importing module %s(%s) names %s level %s location %s:%s" % (repr(module), repr(module_as), repr(import_names), repr(relative_level), repr(lineno), repr(charno))
+#       print "importing module %s(%s) names %s level %s location %s:%s" % (repr(module), repr(module_as), repr(import_names), repr(relative_level), repr(lineno), repr(charno))
         if import_names is None:
-            if module_as is None:
-                module_as = module
+#           if module_as is None:
+#               module_as = module
             return ast.Import(ast.alias(module, module_as), lineno=lineno, col_offset=charno)
         else:
             return ast.ImportFrom(module, [ast.alias(name, asname) for (name,asname) in import_names], relative_level, lineno=lineno, col_offset=charno)

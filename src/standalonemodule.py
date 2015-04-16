@@ -70,7 +70,7 @@ class ImportNodeTransformer(ast.NodeTransformer):
             self, module, module_as = None,
             import_names = None, relative_level = None,
             lineno = None, charno = None):
-        print "importing module %s(%s) names %s level %s location %s:%s" % (repr(module), repr(module_as), repr(import_names), repr(relative_level), repr(lineno), repr(charno))
+        #print "importing module %s(%s) names %s level %s location %s:%s" % (repr(module), repr(module_as), repr(import_names), repr(relative_level), repr(lineno), repr(charno))
         if import_names is None:
             if module_as is None:
                 module_as = module
@@ -145,7 +145,7 @@ class ASTFormatter(ast.NodeVisitor):
         return "and"
 
     def visit_arguments(self,node):
-        args = ["%s" % (self.visit(arg),) for arg in node.args[:-len(node.defaults)]]
+        args = ["%s" % (self.visit(arg),) for arg in node.args[:len(node.args)-len(node.defaults)]]
         defargs = ["%s=%s" % (self.visit(arg), self.visit(default)) for (arg,default) in zip(node.args[-len(node.defaults):], node.defaults)]
         if node.vararg:
             vararg = ["*" + self.visit(node.vararg)]
@@ -711,4 +711,4 @@ if __name__ == '__main__':
     import inspect
     module = StandaloneModule(inspect.getfile(inspect.currentframe()))
     import pprint
-    pprint.pprint(module)
+    #pprint.pprint(module)

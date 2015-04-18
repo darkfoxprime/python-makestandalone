@@ -20,6 +20,7 @@ if (
 import ast
 import os.path
 import re
+import codegen
 
 ########################################################################
 # 3rd party libraries
@@ -709,6 +710,9 @@ class StandaloneModule(object):
 
 if __name__ == '__main__':
     import inspect
-    module = StandaloneModule(inspect.getfile(inspect.currentframe()))
+    if len(sys.argv) > 0:
+        module = StandaloneModule(sys.argv[1])
+    else:
+        module = StandaloneModule(inspect.getfile(inspect.currentframe()))
     import pprint
     #pprint.pprint(module)

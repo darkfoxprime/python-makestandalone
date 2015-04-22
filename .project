@@ -3,6 +3,7 @@
 	<name>python-makestandalone</name>
 	<comment></comment>
 	<projects>
+		<project>codegen</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

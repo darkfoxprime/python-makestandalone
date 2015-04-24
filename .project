@@ -3,7 +3,7 @@
 	<name>python-makestandalone</name>
 	<comment></comment>
 	<projects>
-		<project>codegen</project>
+		<project>python-astformatter</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
